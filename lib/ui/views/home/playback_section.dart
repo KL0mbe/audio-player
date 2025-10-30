@@ -15,12 +15,19 @@ class PlaybackSection extends StatefulWidget {
 class _PlaybackSectionState extends State<PlaybackSection> {
   final _player = AudioPlayer();
   Duration position = Duration.zero;
+  Duration duration = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _init();
+
     _player.positionStream.listen((p) => setState(() => position = p));
+    _player.durationStream.listen(
+      (d) => setState(() {
+        if (d != null) duration = d;
+      }),
+    );
   }
 
   @override
@@ -53,7 +60,7 @@ class _PlaybackSectionState extends State<PlaybackSection> {
           child: Slider(
             value: position.inSeconds.toDouble(),
             min: 0,
-            max: _player.duration!.inSeconds.toDouble(),
+            max: duration.inSeconds.toDouble(),
             onChanged: (newValue) => _player.seek(Duration(seconds: newValue.toInt())),
             // onChangeEnd: (newValue) => _player.seek(Duration(seconds: newValue.toInt())),
           ),

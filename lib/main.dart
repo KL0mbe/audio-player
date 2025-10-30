@@ -1,9 +1,14 @@
+import 'package:audio_player/core/app_init.dart';
+import 'package:audio_player/core/providers/audio_provider.dart';
 import 'package:audio_player/ui/views/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppInit.init();
+  runApp(ChangeNotifierProvider.value(value: getIt<AudioProvider>(), child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

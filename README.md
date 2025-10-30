@@ -1,16 +1,11 @@
-# audio_player
+# Audio Player
 
-Play files on your phone
+a customizable audio player for playing local files on your phone
 
-## Getting Started
+Built as a learning project for:
+- **SQLite (`sqflite`)** for local data storage and persistence
+- **Flutter state management** with `Provider` and `GetIt`
+- **Audio playback** using `just_audio` and `audio_session`
+- **Responsive UI design** with `flutter_screenutil`
+- **File access** via `path_provider` and iOS/Android sandbox directories
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
