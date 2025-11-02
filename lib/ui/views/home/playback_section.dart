@@ -1,9 +1,11 @@
-import 'package:audio_player/ui/widgets/app_defaults/my_body_text.dart';
 import 'package:audio_player/ui/widgets/app_defaults/my_icon_button.dart';
-import 'package:flutter/material.dart';
+import 'package:audio_player/ui/widgets/app_defaults/my_body_text.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:audio_player/core/app_init.dart';
+import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:just_audio/just_audio.dart';
+import 'dart:math';
 
 class PlaybackSection extends StatefulWidget {
   const PlaybackSection({super.key});
@@ -13,42 +15,27 @@ class PlaybackSection extends StatefulWidget {
 }
 
 class _PlaybackSectionState extends State<PlaybackSection> {
-  final _player = AudioPlayer();
+  final handler = getIt<AudioHandler>();
   Duration position = Duration.zero;
   Duration duration = Duration.zero;
+  bool playing = false;
+  bool isScrubbing = false;
+  double dragValue = 0;
 
   @override
   void initState() {
     super.initState();
-    _init();
-
-    _player.positionStream.listen((p) => setState(() => position = p));
-    _player.durationStream.listen(
-      (d) => setState(() {
-        if (d != null) duration = d;
-      }),
-    );
-  }
-
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
-  }
-
-  Future<void> _init() async {
-    try {
-      await AudioPlayer.clearAssetCache();
-      await _player.setAsset('assets/files/Colter Wall  Summer Wages  Western AF.mp3');
-    } on PlayerException catch (e) {
-      print("Error loading Audio Source $e");
-    }
+    AudioService.position.listen((p) => setState(() => position = p));
+    handler.playbackState.listen((state) => setState(() => playing = state.playing));
+    handler.mediaItem.listen((item) {
+      if (item?.duration != null) setState(() => duration = item!.duration!);
+    });
   }
 
   String formatDuration(Duration duration) {
-    int minutes = duration.inMinutes.remainder(60);
-    int seconds = duration.inSeconds.remainder(60);
-    return "${minutes.toString().padLeft(2, "0")} : ${seconds.toString().padLeft(2, "0")}";
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return "$minutes : $seconds";
   }
 
   @override
@@ -58,34 +45,31 @@ class _PlaybackSectionState extends State<PlaybackSection> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.h),
           child: Slider(
-            value: position.inSeconds.toDouble(),
+            value: isScrubbing ? dragValue : position.inSeconds.clamp(0, duration.inSeconds).toDouble(),
             min: 0,
-            max: duration.inSeconds.toDouble(),
-            onChanged: (newValue) => _player.seek(Duration(seconds: newValue.toInt())),
-            // onChangeEnd: (newValue) => _player.seek(Duration(seconds: newValue.toInt())),
+            max: max(1, duration.inSeconds.toDouble()),
+            onChanged: (newValue) {
+              isScrubbing = true;
+              dragValue = newValue;
+              setState(() {});
+            },
+            onChangeEnd: (newValue) async {
+              isScrubbing = false;
+              await handler.seek(Duration(seconds: newValue.toInt()));
+            },
           ),
         ),
         Gap(12.h),
-        // MyBodyText("${_player.positionStream.listen((position) => setState(() => _position = position))}"),
-        MyBodyText(formatDuration(_player.position)),
+        MyBodyText(formatDuration(isScrubbing ? Duration(seconds: dragValue.toInt()) : position)),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+            MyIconButton(icon: Icons.fast_rewind, onPressed: () => handler.rewind()),
             MyIconButton(
-              icon: Icons.fast_rewind,
-              onPressed: () => _player.seek(_player.position - Duration(seconds: 15)),
+              icon: handler.playbackState.value.playing ? Icons.pause : Icons.play_arrow,
+              onPressed: () => handler.playbackState.value.playing ? handler.pause() : handler.play(),
             ),
-            MyIconButton(
-              icon: _player.playing ? Icons.pause : Icons.play_arrow,
-              onPressed: () {
-                _player.playing ? _player.pause() : _player.play();
-                setState(() {});
-              },
-            ),
-            MyIconButton(
-              icon: Icons.fast_forward,
-              onPressed: () => _player.seek(_player.position + Duration(seconds: 15)),
-            ),
+            MyIconButton(icon: Icons.fast_forward, onPressed: () => handler.fastForward()),
           ],
         ),
       ],

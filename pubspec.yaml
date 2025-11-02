@@ -12,11 +12,14 @@ dependencies:
   flutter:
     sdk: flutter
 
+  audio_service: ^0.18.18
+  audio_session: ^0.2.2
   cupertino_icons: ^1.0.8
   flutter_screenutil: ^5.9.3
   gap: ^3.0.1
   get_it: ^8.2.0
   just_audio: ^0.10.5
+  just_audio_background: ^0.0.1-beta.17
   path: ^1.9.1
   path_provider: ^2.1.5
   provider: ^6.1.5+1

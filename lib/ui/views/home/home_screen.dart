@@ -1,13 +1,16 @@
-import 'package:audio_player/ui/views/home/playback_section.dart';
-import 'package:audio_player/ui/widgets/app_defaults/my_body_text.dart';
 import 'package:audio_player/ui/widgets/app_defaults/my_text_button.dart';
+import 'package:audio_player/ui/widgets/app_defaults/my_body_text.dart';
+import 'package:audio_player/ui/views/home/playback_section.dart';
 import 'package:audio_player/ui/widgets/settings_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:audio_player/core/app_init.dart';
+import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+  static final audioHandler = getIt<AudioHandler>();
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +36,12 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
               Gap(64.h),
-              MyBodyText.semiBold("Title"),
+              MyBodyText.semiBold("${audioHandler.mediaItem.value?.title}"),
               Gap(24.h),
               SizedBox(
-                width: 300,
-                height: 300,
-                child: Image(image: AssetImage("assets/files/Screenshot 2025-10-26 at 15.06.26.png")),
+                width: 300.h,
+                height: 300.h,
+                child: Image(image: AssetImage("assets/files/avatar.png")),
               ),
               Gap(24.h),
               PlaybackSection(),

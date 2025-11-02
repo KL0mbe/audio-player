@@ -1,6 +1,6 @@
-import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
 class DatabaseService {
   Database? db;
@@ -33,10 +33,11 @@ class DatabaseService {
       CREATE TABLE files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       path TEXT NOT NULL UNIQUE,
-      skip INTEGER,
+      fast_forward INTEGER,
       rewind INTEGER,
       last_position REAL,
-      speed REAL,
+      is_skip BOOLEAN DEFAULT FALSE,
+      speed REAL
         )""");
     await db.execute("""
       CREATE TABLE current_file (
