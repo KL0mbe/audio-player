@@ -15,6 +15,7 @@ dependencies:
   audio_service: ^0.18.18
   audio_session: ^0.2.2
   cupertino_icons: ^1.0.8
+  file_picker: ^10.3.3
   flutter_screenutil: ^5.9.3
   gap: ^3.0.1
   get_it: ^8.2.0

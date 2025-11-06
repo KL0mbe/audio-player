@@ -1,7 +1,9 @@
+import 'package:path_provider/path_provider.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:math';
+import 'dart:io';
 
 Future<AudioHandler> initAudioHandler() async {
   return await AudioService.init(
@@ -42,28 +44,27 @@ class MyAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> skipToNext() async => await fastForward();
+
   @override
   Future<void> skipToPrevious() async => await rewind();
+
+  @override
+  // ignore: avoid_renaming_method_parameters
+  Future<void> playMediaItem(MediaItem item) async {
+    final libDir = await getLibraryDirectory();
+    final stableDir = Directory("${libDir.path}/media");
+    final path = "${stableDir.path}/${item.extras?["path"]}";
+    final exists = await File(path).exists();
+    print("Play path: $path");
+    print("Exists on disk: $exists");
+    mediaItem.add(item);
+
+    await _player.setAudioSource(AudioSource.file(path));
+  }
 
   Future<void> _init() async {
     final session = await AudioSession.instance;
     await session.configure(AudioSessionConfiguration.music());
-    try {
-      // await AudioPlayer.clearAssetCache();
-      final tag = MediaItem(id: "1", title: "Colter Wall", album: "Colter's Album");
-      mediaItem.add(tag);
-      await _player.setAudioSource(AudioSource.asset("assets/files/Colter Wall.mp3", tag: tag));
-      _player.durationStream.listen((duration) {
-        if (duration != null) {
-          final current = mediaItem.value;
-          if (current != null && current.duration != duration) {
-            mediaItem.add(current.copyWith(duration: duration));
-          }
-        }
-      });
-    } on PlayerException catch (e) {
-      print("Error loading Audio Source $e");
-    }
   }
 
   void _notifyAudioHandlerAboutPlaybackEvents() {
