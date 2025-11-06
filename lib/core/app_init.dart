@@ -11,8 +11,9 @@ class AppInit {
 
   static Future<void> init() async {
     getIt.registerSingleton<DatabaseService>(DatabaseService());
-    getIt.registerSingleton<AudioProvider>(AudioProvider());
-    getIt.registerSingleton<AudioHandler>(await initAudioHandler());
     await getIt<DatabaseService>().init();
+    getIt.registerSingleton<AudioProvider>(AudioProvider());
+    await getIt<AudioProvider>().init();
+    getIt.registerSingleton<AudioHandler>(await initAudioHandler());
   }
 }

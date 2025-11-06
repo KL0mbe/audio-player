@@ -1,26 +1,51 @@
+import 'package:audio_player/core/models/file_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseService {
-  Database? db;
-  // use db only from in here
+  late final Database _db;
 
   Future<void> init() async {
-    await openDB();
-    // we might not need to call opendb from here. doesnt really make sense
-    // maybe just call it from database service
-    // and extracting of the current file
-    // it should be stored in its own table
-    // using the primary key of that file
+    // for testing
+    // final dir = await getLibraryDirectory();
+    // final dbPath = join(dir.path, 'master_db.db');
+    // if (await File(dbPath).exists()) await File(dbPath).delete();
+    // print("RESET DATABASE");
+
+    await _openDB();
   }
 
-  Future<void> openDB() async {
-    if (db != null && db!.isOpen) return;
+  Future<void> _openDB() async {
     final databaseDirectory = await getLibraryDirectory();
     final dbPath = join(databaseDirectory.path, "master_db.db");
-    db = await openDatabase(dbPath, version: 1, onConfigure: _onConfigure, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    _db = await openDatabase(dbPath, version: 1, onConfigure: _onConfigure, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
+
+  Future<void> insertFile(String path, {bool isSong = false}) async => await _db.execute(
+    "INSERT INTO files (path, fast_forward, rewind, is_skip) VALUES(?, ?, ?, ?)",
+    [path, 15, 15, isSong],
+  );
+
+  Future<bool> containsFile(String path) async {
+    final result = await _db.rawQuery("SELECT * FROM files WHERE path = ?", [path]);
+    return result.isNotEmpty;
+  }
+
+  Future<List<FileData>> getFiles() async {
+    final result = await _db.rawQuery("SELECT * FROM files");
+    return result.map((row) => FileData(id: row['id'] as int, path: row['path'] as String)).toList();
+  }
+
+  Future<FileData?> getCurrentFile() async {
+    final result = await _db.rawQuery('SELECT f.* FROM files f JOIN current_file c ON f.id = c.file_id WHERE c.id = 1');
+    if (result.isEmpty) return null;
+    final row = result.first;
+    return FileData(id: row["id"] as int, path: row["path"] as String);
+  }
+
+  Future<void> setCurrentFile(int id) async =>
+      _db.execute("INSERT OR REPLACE INTO current_file(id, file_id) VALUES(1, ?)", [id]);
 
   _onConfigure(Database db) async {
     await db.execute("PRAGMA foreign_keys = ON");
@@ -35,9 +60,9 @@ class DatabaseService {
       path TEXT NOT NULL UNIQUE,
       fast_forward INTEGER,
       rewind INTEGER,
-      last_position REAL,
+      last_position REAL DEFAULT 0,
       is_skip BOOLEAN DEFAULT FALSE,
-      speed REAL
+      speed REAL DEFAULT 1
         )""");
     await db.execute("""
       CREATE TABLE current_file (
