@@ -51,6 +51,7 @@ class MyAudioHandler extends BaseAudioHandler {
   @override
   // ignore: avoid_renaming_method_parameters
   Future<void> playMediaItem(MediaItem item) async {
+    _player.pause();
     final libDir = await getLibraryDirectory();
     final stableDir = Directory("${libDir.path}/media");
     final path = "${stableDir.path}/${item.extras?["path"]}";
@@ -60,6 +61,12 @@ class MyAudioHandler extends BaseAudioHandler {
     mediaItem.add(item);
 
     await _player.setAudioSource(AudioSource.file(path));
+    _player.durationStream.listen((duration) {
+      if (duration == null) return;
+      final current = mediaItem.value;
+      if (current == null) return;
+      mediaItem.add(current.copyWith(duration: duration));
+    });
   }
 
   Future<void> _init() async {

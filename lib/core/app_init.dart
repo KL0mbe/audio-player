@@ -13,7 +13,7 @@ class AppInit {
     getIt.registerSingleton<DatabaseService>(DatabaseService());
     await getIt<DatabaseService>().init();
     getIt.registerSingleton<AudioProvider>(AudioProvider());
-    await getIt<AudioProvider>().init();
     getIt.registerSingleton<AudioHandler>(await initAudioHandler());
+    await getIt<AudioProvider>().init();
   }
 }

@@ -1,20 +1,21 @@
+import 'package:audio_player/core/providers/audio_provider.dart';
 import 'package:audio_player/ui/widgets/app_defaults/my_text_button.dart';
 import 'package:audio_player/ui/widgets/app_defaults/my_body_text.dart';
 import 'package:audio_player/ui/views/home/playback_section.dart';
 import 'package:audio_player/ui/views/files/files_screen.dart';
 import 'package:audio_player/ui/widgets/settings_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:audio_service/audio_service.dart';
-import 'package:audio_player/core/app_init.dart';
+import 'package:provider/provider.dart';
+import 'package:path/path.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-  static final audioHandler = getIt<AudioHandler>();
 
   @override
   Widget build(BuildContext context) {
+    final audioProvider = context.watch<AudioProvider>();
     return Scaffold(
       appBar: AppBar(title: MyBodyText.semiBold("Audio Player")),
       drawer: Drawer(
@@ -40,7 +41,9 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
               Gap(64.h),
-              MyBodyText.semiBold("${audioHandler.mediaItem.value?.title}"),
+              MyBodyText.semiBold(
+                audioProvider.currentFile == null ? "" : basenameWithoutExtension(audioProvider.currentFile!.path),
+              ),
               Gap(24.h),
               SizedBox(
                 width: 300.h,

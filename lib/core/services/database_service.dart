@@ -22,10 +22,8 @@ class DatabaseService {
     _db = await openDatabase(dbPath, version: 1, onConfigure: _onConfigure, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
-  Future<void> insertFile(String path, {bool isSong = false}) async => await _db.execute(
-    "INSERT INTO files (path, fast_forward, rewind, is_skip) VALUES(?, ?, ?, ?)",
-    [path, 15, 15, isSong],
-  );
+  Future<void> insertFile(String path, {bool isSong = false}) async =>
+      await _db.execute("INSERT INTO files (path, is_skip) VALUES(?, ?)", [path, isSong]);
 
   Future<bool> containsFile(String path) async {
     final result = await _db.rawQuery("SELECT * FROM files WHERE path = ?", [path]);
@@ -34,14 +32,13 @@ class DatabaseService {
 
   Future<List<FileData>> getFiles() async {
     final result = await _db.rawQuery("SELECT * FROM files");
-    return result.map((row) => FileData(id: row['id'] as int, path: row['path'] as String)).toList();
+    return result.map((row) => FileData.fromMap(row)).toList();
   }
 
   Future<FileData?> getCurrentFile() async {
     final result = await _db.rawQuery('SELECT f.* FROM files f JOIN current_file c ON f.id = c.file_id WHERE c.id = 1');
     if (result.isEmpty) return null;
-    final row = result.first;
-    return FileData(id: row["id"] as int, path: row["path"] as String);
+    return FileData.fromMap(result.first);
   }
 
   Future<void> setCurrentFile(int id) async =>
@@ -58,8 +55,8 @@ class DatabaseService {
       CREATE TABLE files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       path TEXT NOT NULL UNIQUE,
-      fast_forward INTEGER,
-      rewind INTEGER,
+      fast_forward INTEGER DEFAULT 15,
+      rewind INTEGER DEFAULT 15,
       last_position REAL DEFAULT 0,
       is_skip BOOLEAN DEFAULT FALSE,
       speed REAL DEFAULT 1
