@@ -19,7 +19,7 @@ class FileCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsetsGeometry.all(8.h),
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r), color: Colors.blueGrey),
-          child: MyBodyText(basename(file.path)),
+          child: MyBodyText(basename(file.title)),
         ),
       ),
     );

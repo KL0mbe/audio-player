@@ -16,11 +16,13 @@ dependencies:
   audio_session: ^0.2.2
   cupertino_icons: ^1.0.8
   file_picker: ^10.3.3
+  flutter_media_metadata: ^1.0.0+1
   flutter_screenutil: ^5.9.3
   gap: ^3.0.1
-  get_it: ^8.2.0
+  get_it: ^9.0.5
   just_audio: ^0.10.5
   just_audio_background: ^0.0.1-beta.17
+  mime: ^2.0.0
   path: ^1.9.1
   path_provider: ^2.1.5
   provider: ^6.1.5+1
@@ -30,14 +32,15 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
 
   uses-material-design: true
 
+
   assets:
-    - assets/files/
+    - assets/media/
 
   # fonts:
   #   - family: Schyler

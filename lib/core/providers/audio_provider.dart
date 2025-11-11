@@ -1,11 +1,15 @@
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:audio_player/core/services/database_service.dart';
 import 'package:audio_player/core/models/file_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_player/core/app_init.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:mime/mime.dart';
 import 'package:path/path.dart';
+import 'dart:convert';
 import 'dart:io';
 
 class AudioProvider extends ChangeNotifier {
@@ -16,10 +20,16 @@ class AudioProvider extends ChangeNotifier {
 
   List<FileData> _files = [];
   List<FileData> get files => _files;
+  late Directory libDirectory;
+
+  String get coverPath => '${libDirectory.path}/media/${currentFile!.cover}';
 
   Future<void> init() async {
     await loadFiles();
     await loadCurrentFile();
+    // for testing only not permanent solution
+    // refactor to cache directory in app init
+    libDirectory = await getLibraryDirectory();
   }
 
   Future<void> loadCurrentFile() async {
@@ -38,7 +48,12 @@ class AudioProvider extends ChangeNotifier {
   Future<void> setCurrentFile(FileData file) async {
     // passing file might be stale (somehow) so use id and get the file
     await dbService.setCurrentFile(file.id);
-    final mediaItem = MediaItem(id: file.id.toString(), title: file.path, extras: {'path': file.path});
+    final mediaItem = MediaItem(
+      id: file.id.toString(),
+      title: file.title,
+      artist: file.author.first,
+      extras: {'path': file.path, "coverPath": file.cover},
+    );
     await getIt<AudioHandler>().playMediaItem(mediaItem);
     _currentFile = file;
     notifyListeners();
@@ -72,8 +87,19 @@ class AudioProvider extends ChangeNotifier {
       if (await dbService.containsFile(basePath)) continue;
 
       await file.copy(dest.path);
+      final metadata = await MetadataRetriever.fromFile(dest);
+      final mimeType = lookupMimeType("", headerBytes: metadata.albumArt);
+      final ext = mimeType?.split("/").last ?? "png";
+      final coverPath = "${basenameWithoutExtension(dest.path)}_cover.$ext";
+      if (metadata.albumArt != null) {
+        await File("${stableDir.path}/$coverPath").writeAsBytes(metadata.albumArt!);
+      } else {
+        final data = await rootBundle.load("assets/media/avatar.png");
+        final bytes = data.buffer.asUint8List();
+        File("${stableDir.path}/$coverPath").writeAsBytes(bytes);
+      }
       // bool isSong = ["mp3", "m4a", "aac", "wav", "flac"].contains(extension(file.path));
-      await dbService.insertFile(basePath);
+      await dbService.insertFile(basePath, metadata.trackName ?? "", jsonEncode(metadata.trackArtistNames), coverPath);
     }
     await loadFiles();
   }

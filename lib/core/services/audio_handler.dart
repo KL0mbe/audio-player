@@ -55,10 +55,12 @@ class MyAudioHandler extends BaseAudioHandler {
     final libDir = await getLibraryDirectory();
     final stableDir = Directory("${libDir.path}/media");
     final path = "${stableDir.path}/${item.extras?["path"]}";
+    final coverPath = "${stableDir.path}/${item.extras?["coverPath"]}";
     final exists = await File(path).exists();
     print("Play path: $path");
+    print("cover path: $coverPath");
     print("Exists on disk: $exists");
-    mediaItem.add(item);
+    mediaItem.add(item.copyWith(artUri: Uri.file(coverPath)));
 
     await _player.setAudioSource(AudioSource.file(path));
     _player.durationStream.listen((duration) {

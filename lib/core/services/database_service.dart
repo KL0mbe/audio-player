@@ -2,6 +2,7 @@ import 'package:audio_player/core/models/file_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:async';
 
 class DatabaseService {
   late final Database _db;
@@ -22,8 +23,14 @@ class DatabaseService {
     _db = await openDatabase(dbPath, version: 1, onConfigure: _onConfigure, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
-  Future<void> insertFile(String path, {bool isSong = false}) async =>
-      await _db.execute("INSERT INTO files (path, is_skip) VALUES(?, ?)", [path, isSong]);
+  Future<void> insertFile(String path, String title, String author, String cover, {bool isSong = false}) async =>
+      await _db.execute("INSERT INTO files (path, title, author, cover, is_skip) VALUES(?, ?, ?, ?, ?)", [
+        path,
+        title,
+        author,
+        cover,
+        isSong,
+      ]);
 
   Future<bool> containsFile(String path) async {
     final result = await _db.rawQuery("SELECT * FROM files WHERE path = ?", [path]);
@@ -44,17 +51,20 @@ class DatabaseService {
   Future<void> setCurrentFile(int id) async =>
       _db.execute("INSERT OR REPLACE INTO current_file(id, file_id) VALUES(1, ?)", [id]);
 
-  _onConfigure(Database db) async {
+  FutureOr<void> _onConfigure(Database db) async {
     await db.execute("PRAGMA foreign_keys = ON");
   }
 
-  _onUpgrade(Database db, int oldVersion, int newVersion) {}
+  FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) {}
 
-  _onCreate(Database db, int version) async {
+  FutureOr<void> _onCreate(Database db, int version) async {
     await db.execute("""
       CREATE TABLE files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       path TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      author TEXT NOT NULL,
+      cover TEXT NOT NULL UNIQUE,
       fast_forward INTEGER DEFAULT 15,
       rewind INTEGER DEFAULT 15,
       last_position REAL DEFAULT 0,
